@@ -87,7 +87,7 @@ export default function TrackTicket() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
-            <span className="text-xs font-medium text-accent-indigo">Ticket Tracker</span>
+            <span className="text-xs font-medium text-accent-indigo">LoopDesk Tracker</span>
           </div>
           <h1 className="text-3xl font-bold text-text-primary mb-2">
             Track Your Ticket
@@ -139,8 +139,8 @@ export default function TrackTicket() {
         {/* Results */}
         {searched && !loading && tickets.length === 0 && !error && (
           <div className="glass-card p-8 text-center animate-fade-in">
-            <svg className="w-12 h-12 text-text-muted mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg className="w-16 h-16 text-text-muted/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4-4m-4 4l-4-4" />
             </svg>
             <p className="text-text-secondary text-sm">
               No tickets found. Double-check your email or ticket ID.
@@ -148,7 +148,14 @@ export default function TrackTicket() {
           </div>
         )}
 
-        {tickets.length > 0 && (
+        {loading && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="glass-card p-6 skeleton-box h-40"></div>
+            <div className="glass-card p-6 skeleton-box h-40"></div>
+          </div>
+        )}
+
+        {tickets.length > 0 && !loading && (
           <div className="space-y-4 stagger-children">
             {tickets.map((ticket) => (
               <div key={ticket.id || ticket.ticket_id} className="glass-card p-6">
@@ -188,15 +195,6 @@ export default function TrackTicket() {
           </div>
         )}
 
-        {/* Back link */}
-        <div className="text-center mt-8">
-          <a
-            href="/"
-            className="text-sm text-text-muted hover:text-accent-violet transition-colors"
-          >
-            ← Back to Support Center
-          </a>
-        </div>
       </div>
     </div>
   );

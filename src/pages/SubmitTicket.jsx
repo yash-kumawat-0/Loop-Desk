@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFunctionRun } from "lemma-sdk/react";
 import client from "../api/client";
+import CustomSelect from '../components/CustomSelect';
+import TicketIdModal from '../components/TicketIdModal';
 
 /**
  * SubmitTicket — main landing page for customers.
@@ -76,6 +78,8 @@ export default function SubmitTicket() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [submittedTicketId, setSubmittedTicketId] = useState('');
   
   const { start: submitTicket } = useFunctionRun({ client, functionName: "customer_panel_submit_ticket" });
 
@@ -119,7 +123,8 @@ export default function SubmitTicket() {
         ticketData.id || 
         ticketData.record_id || 
         'unknown';
-      navigate(`/confirmation?ticketId=${encodeURIComponent(ticketId)}`);
+      setSubmittedTicketId(ticketId);
+      setShowModal(true);
     } catch (err) {
       console.error('Submit failed:', err);
       setError(
@@ -141,7 +146,7 @@ export default function SubmitTicket() {
             <svg className="w-4 h-4 text-accent-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
-            <span className="text-xs font-medium text-accent-violet">Support Center</span>
+            <span className="text-xs font-medium text-accent-violet">LoopDesk Support</span>
           </div>
           <h1 className="text-3xl font-bold text-text-primary mb-2">
             How can we help?
@@ -203,48 +208,34 @@ export default function SubmitTicket() {
 
             {/* Category */}
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-text-secondary mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Category
               </label>
-              <select
-                id="category"
-                name="category"
+              <CustomSelect
+                options={CATEGORIES.map(c => ({ label: c, value: c }))}
                 value={form.category}
-                onChange={handleChange}
-                className="form-input"
-                required
-              >
-                <option value="" disabled>Select a category</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+                onChange={(val) => handleChange({ target: { name: 'category', value: val } })}
+                placeholder="Select a category"
+              />
             </div>
 
             {/* Subject */}
             {form.category && form.category !== 'Other' && (
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-text-secondary mb-2">
+              <div className="animate-slide-in overflow-hidden">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Subject
                 </label>
-                <select
-                  id="subject"
-                  name="subject"
+                <CustomSelect
+                  options={(SUBJECT_MAP[form.category] || []).map(s => ({ label: s, value: s }))}
                   value={form.subject}
-                  onChange={handleChange}
-                  className="form-input"
-                  required
-                >
-                  <option value="" disabled>Select a subject</option>
-                  {SUBJECT_MAP[form.category]?.map(sub => (
-                    <option key={sub} value={sub}>{sub}</option>
-                  ))}
-                </select>
+                  onChange={(val) => handleChange({ target: { name: 'subject', value: val } })}
+                  placeholder="Select a subject"
+                />
               </div>
             )}
 
             {form.category === 'Other' && (
-              <div>
+              <div className="animate-slide-in overflow-hidden">
                 <label htmlFor="subject" className="block text-sm font-medium text-text-secondary mb-2">
                   Subject
                 </label>
@@ -318,6 +309,13 @@ export default function SubmitTicket() {
           </a>
         </div>
       </div>
+
+      {showModal && (
+        <TicketIdModal 
+          ticketId={submittedTicketId} 
+          onClose={() => setShowModal(false)} 
+        />
+      )}
     </div>
   );
 }

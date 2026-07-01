@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 
 /**
@@ -7,6 +8,13 @@ import { useSearchParams, Link } from 'react-router-dom';
 export default function Confirmation() {
   const [searchParams] = useSearchParams();
   const ticketId = searchParams.get('ticketId') || 'N/A';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(ticketId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 py-12">
@@ -33,17 +41,34 @@ export default function Confirmation() {
             Ticket Submitted!
           </h1>
           <p className="text-text-secondary text-sm mb-6">
-            Your support request has been received. Our AI is analyzing and routing it to the right team.
+            Your support request to LoopDesk has been received. Our AI is analyzing and routing it to the right team.
           </p>
 
           {/* Ticket ID */}
-          <div className="glass-card p-4 mb-6">
-            <p className="text-xs text-text-muted uppercase tracking-wider mb-1">
-              Your Ticket ID
-            </p>
-            <p className="text-xl font-mono font-bold text-accent-violet" id="ticket-id-display">
-              {ticketId}
-            </p>
+          <div className="bg-surface-800/50 rounded-xl border border-glass-border p-4 mb-6 flex items-center justify-between text-left">
+            <div>
+              <p className="text-xs text-text-muted uppercase tracking-wider mb-1">
+                Your Ticket ID
+              </p>
+              <p className="text-xl font-mono font-bold text-accent-violet" id="ticket-id-display">
+                {ticketId}
+              </p>
+            </div>
+            <button 
+              onClick={handleCopy}
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-glass-border text-text-secondary hover:text-white flex-shrink-0 ml-4"
+              title="Copy ID"
+            >
+              {copied ? (
+                <svg className="w-5 h-5 text-accent-emerald" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </svg>
+              )}
+            </button>
           </div>
 
           {/* Actions */}
