@@ -97,8 +97,24 @@ export default function SubmitTicket() {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center px-8 py-8">
+    <div className="flex-1 flex items-start justify-center px-8 pt-14 pb-8">
       <div className="w-full max-w-3xl animate-fade-in-up">
+
+        {/* Header */}
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-violet/10 border border-accent-violet/20 mb-4">
+            <svg className="w-4 h-4 text-accent-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <span className="text-xs font-medium text-accent-violet">LoopDesk Support</span>
+          </div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            Submit a Ticket
+          </h1>
+          <p className="text-text-secondary text-sm">
+            Tell us what's going on and our AI will get back to you.
+          </p>
+        </div>
 
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-accent-rose/10 border border-accent-rose/20 text-accent-rose text-sm animate-fade-in">
