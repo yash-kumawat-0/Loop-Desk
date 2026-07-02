@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFunctionRun } from "lemma-sdk/react";
-import client from "../api/client";
 import CustomSelect from '../components/CustomSelect';
-import TicketIdModal from '../components/TicketIdModal';
 
-/**
- * SubmitTicket — main landing page for customers.
- * Features a knowledge base search bar and ticket submission form.
- * No category dropdown — the AI triage agent classifies automatically.
- */
 const SUBJECT_MAP = {
   "Account": [
     "Changing your email address",
@@ -76,12 +68,7 @@ export default function SubmitTicket() {
     subject: '',
     message: '',
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [submittedTicketId, setSubmittedTicketId] = useState('');
-  
-  const { start: submitTicket } = useFunctionRun({ client, functionName: "customer_panel_submit_ticket" });
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -92,208 +79,146 @@ export default function SubmitTicket() {
     }
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
-    // Basic validation
     if (!form.name.trim() || !form.email.trim() || !form.category.trim() || !form.subject.trim() || !form.message.trim()) {
       setError('Please fill in all fields.');
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const response = await submitTicket({
-        source: 'form',
-        customer_name: form.name,
-        customer_contact: form.email,
-        category: form.category,
-        subject: form.subject,
-        body: form.message,
-      });
-
-      console.log('Submit response:', response);
-
-      // Navigate to confirmation with ticket ID
-      const ticketData = response?.output_data || {};
-      const ticketId = 
-        ticketData.ticket_id || 
-        ticketData.ticket?.id || 
-        ticketData.id || 
-        ticketData.record_id || 
-        'unknown';
-      setSubmittedTicketId(ticketId);
-      setShowModal(true);
-    } catch (err) {
-      console.error('Submit failed:', err);
-      setError(
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Failed to submit your ticket. Please try again.'
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    // Navigate to the submitting page, pass form data via route state
+    navigate('/submitting', { state: { form } });
   }
 
   return (
-    <div className="flex-1 px-6 py-10 max-w-2xl mx-auto w-full animate-fade-in-up">
-      {/* Header */}
-      <div className="mb-10">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-violet/10 border border-accent-violet/20 mb-4">
-          <svg className="w-4 h-4 text-accent-violet" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          <span className="text-xs font-medium text-accent-violet">LoopDesk Support</span>
-        </div>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">
-          Submit a Ticket
-        </h1>
-        <p className="text-text-secondary text-sm">
-          Tell us what's going on and our AI will get back to you.
-        </p>
-      </div>
+    <div className="flex-1 flex items-center justify-center px-8 py-8">
+      <div className="w-full max-w-3xl animate-fade-in-up">
 
-      {error && (
-        <div className="mb-6 p-4 rounded-lg bg-accent-rose/10 border border-accent-rose/20 text-accent-rose text-sm animate-fade-in">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Name & Email row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-2">
-              Your Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="John Doe"
-              className="form-input"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="john@example.com"
-              className="form-input"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">
-            Category
-          </label>
-          <CustomSelect
-            options={CATEGORIES.map(c => ({ label: c, value: c }))}
-            value={form.category}
-            onChange={(val) => handleChange({ target: { name: 'category', value: val } })}
-            placeholder="Select a category"
-          />
-        </div>
-
-        {/* Subject */}
-        {form.category && form.category !== 'Other' && (
-          <div className="animate-slide-in">
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              Subject
-            </label>
-            <CustomSelect
-              options={(SUBJECT_MAP[form.category] || []).map(s => ({ label: s, value: s }))}
-              value={form.subject}
-              onChange={(val) => handleChange({ target: { name: 'subject', value: val } })}
-              placeholder="Select a subject"
-            />
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-accent-rose/10 border border-accent-rose/20 text-accent-rose text-sm animate-fade-in">
+            {error}
           </div>
         )}
 
-        {form.category === 'Other' && (
-          <div className="animate-slide-in">
-            <label htmlFor="subject" className="block text-sm font-medium text-text-secondary mb-2">
-              Subject
+        <form onSubmit={handleSubmit} className="space-y-7">
+          {/* Name & Email row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-2">
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="John Doe"
+                className="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="john@example.com"
+                className="form-input"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Category & Subject row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Category
+              </label>
+              <CustomSelect
+                options={CATEGORIES.map(c => ({ label: c, value: c }))}
+                value={form.category}
+                onChange={(val) => handleChange({ target: { name: 'category', value: val } })}
+                placeholder="Select a category"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Subject
+              </label>
+              {!form.category ? (
+                <div className="form-input text-text-muted cursor-not-allowed opacity-50">
+                  Select category first
+                </div>
+              ) : form.category === 'Other' ? (
+                <div className="animate-slide-in">
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={form.subject}
+                    onChange={handleChange}
+                    placeholder="Briefly describe your issue"
+                    className="form-input"
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="animate-slide-in">
+                  <CustomSelect
+                    options={(SUBJECT_MAP[form.category] || []).map(s => ({ label: s, value: s }))}
+                    value={form.subject}
+                    onChange={(val) => handleChange({ target: { name: 'subject', value: val } })}
+                    placeholder="Select a subject"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Message — full width */}
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-text-secondary mb-2">
+              Message
             </label>
-            <input
-              type="text"
-              id="subject"
-              name="subject"
-              value={form.subject}
+            <textarea
+              id="message"
+              name="message"
+              value={form.message}
               onChange={handleChange}
-              placeholder="Briefly describe your issue"
-              className="form-input"
+              placeholder="Please describe your issue in detail..."
+              className="form-input form-textarea"
+              rows={6}
               required
             />
           </div>
-        )}
 
-        {/* Message */}
-        <div>
-          <label htmlFor="message" className="block text-sm font-medium text-text-secondary mb-2">
-            Message
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            value={form.message}
-            onChange={handleChange}
-            placeholder="Please describe your issue in detail..."
-            className="form-input form-textarea"
-            rows={5}
-            required
-          />
-        </div>
-
-        {/* Submit */}
-        <div className="pt-2">
+          {/* Submit */}
           <button
             type="submit"
-            disabled={submitting}
-            className="btn-primary w-full"
+            className="btn-primary w-full py-3.5 text-base"
             id="submit-ticket-btn"
           >
-            {submitting ? (
-              <>
-                <div className="spinner" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                Submit Ticket
-              </>
-            )}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            Submit Ticket
           </button>
-        </div>
-      </form>
+        </form>
 
-      <p className="text-xs text-text-muted text-center mt-6">
-        Our AI will analyze and route your ticket to the right team automatically.
-      </p>
-
-      {showModal && (
-        <TicketIdModal 
-          ticketId={submittedTicketId} 
-          onClose={() => setShowModal(false)} 
-        />
-      )}
+        <p className="text-xs text-text-muted text-center mt-5">
+          Our AI will analyze and route your ticket to the right team automatically.
+        </p>
+      </div>
     </div>
   );
 }

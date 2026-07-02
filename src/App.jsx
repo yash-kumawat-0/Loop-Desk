@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { AuthGuard } from "lemma-sdk/react";
 import client, { clientReady } from "./api/client";
 import SubmitTicket from './pages/SubmitTicket';
+import Submitting from './pages/Submitting';
 import Confirmation from './pages/Confirmation';
 import TrackTicket from './pages/TrackTicket';
 import Processing from './pages/Processing';
@@ -37,6 +38,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<SubmitTicket />} />
               <Route path="/submit" element={<SubmitTicket />} />
+              <Route path="/submitting" element={<Submitting />} />
               <Route path="/confirmation" element={<Confirmation />} />
               <Route path="/processing" element={<Processing />} />
               <Route path="/track" element={<TrackTicket />} />
