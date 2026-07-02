@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useFunctionRun } from "lemma-sdk/react";
 import client from "../api/client";
@@ -25,11 +25,16 @@ export default function Submitting() {
     return () => clearInterval(iv);
   }, []);
 
+  const hasSubmitted = useRef(false);
+
   useEffect(() => {
     if (!formData) {
       navigate('/submit');
       return;
     }
+
+    if (hasSubmitted.current) return;
+    hasSubmitted.current = true;
 
     let cancelled = false;
 
@@ -69,7 +74,7 @@ export default function Submitting() {
     })();
 
     return () => { cancelled = true; };
-  }, [formData, navigate, submitTicket]);
+  }, [formData, navigate]);
 
   if (error) {
     return (

@@ -30,20 +30,22 @@ export default function Processing() {
   const { start: fetchTickets } = useFunctionRun({ client, functionName: "customer_panel_list_tickets" });
   const { start: retryTicketCall } = useFunctionRun({ client, functionName: "customer_panel_retry_ticket" });
 
+  const isPolling = useRef(false);
+
   useEffect(() => {
     if (!ticketId) {
       navigate('/');
       return;
     }
 
-    if (status === 'resolved' || isFailed) {
-      return; // Stop polling
-    }
-
     let interval;
     let timerInterval;
 
     const pollStatus = async () => {
+      // Guard against concurrent requests
+      if (isPolling.current) return;
+      isPolling.current = true;
+
       try {
         const res = await fetchTickets({ ticket_id: ticketId });
         const tickets = res?.output_data?.tickets || [];
@@ -54,7 +56,8 @@ export default function Processing() {
           
           // Check for explicit failure
           if (newStatus === 'failed' || t.error_message || res?.output_data?.success === false) {
-            triggerFailure('The agent encountered an error processing your request.');
+            setFailReason('The agent encountered an error processing your request.');
+            setIsFailed(true);
             return;
           }
 
@@ -71,18 +74,22 @@ export default function Processing() {
           // Stall detection: Same status for > 45s (and not resolved)
           const timeSinceLastChange = (Date.now() - lastStatusChangeTime.current) / 1000;
           if (newStatus !== 'resolved' && timeSinceLastChange > 45) {
-            triggerFailure(getFailReasonForStep(newStatus));
+            setFailReason(getFailReasonForStep(newStatus));
+            setIsFailed(true);
             return;
+          }
+          
+          // Stop polling if resolved
+          if (newStatus === 'resolved') {
+            clearInterval(interval);
+            clearInterval(timerInterval);
           }
         }
       } catch (err) {
         console.error("Polling error:", err);
+      } finally {
+        isPolling.current = false;
       }
-    };
-
-    const triggerFailure = (reason) => {
-      setFailReason(reason);
-      setIsFailed(true);
     };
 
     // Initial poll
@@ -95,8 +102,11 @@ export default function Processing() {
     timerInterval = setInterval(() => {
       setTimeElapsed(prev => {
         const next = prev + 1;
-        if (next > 120 && status !== 'resolved') {
-          triggerFailure('The request timed out before it could finish.');
+        if (next > 120 && previousStatus.current !== 'resolved') {
+          setFailReason('The request timed out before it could finish.');
+          setIsFailed(true);
+          clearInterval(interval);
+          clearInterval(timerInterval);
         }
         return next;
       });
@@ -106,7 +116,7 @@ export default function Processing() {
       clearInterval(interval);
       clearInterval(timerInterval);
     };
-  }, [ticketId, fetchTickets, navigate, status, isFailed]);
+  }, [ticketId]); // minimal dependency array: only run on mount or when ticketId changes
 
   // Determine current step index (0-3) based on status
   const getStepIndex = () => {
